@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /
+Sitemap: https://ullan-gps.kekolin.chatgpt.site/sitemap.xml
