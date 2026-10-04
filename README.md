@@ -1,6 +1,6 @@
 # ULLAN GPS
 
-Web de collares localizadores para vacas, con las imágenes y el logo ULLAN GPS y el recorrido de lectura actualizado.
+Web de collares localizadores para vacas, con las imágenes y el logo ULLAN GPS. Incluye capa de interacción: collar con puntos clicables, simulador de vallado virtual, calculadora de estimación y animaciones al hacer scroll.
 
 ## Abrir en local
 

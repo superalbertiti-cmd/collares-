@@ -1,0 +1,277 @@
+/* Elementos del mapa colocados en % del escenario (cqw/cqh = 1 % del escenario) */
+.vzw .vx, .vzw .pin, .vzw .map-tag, .vzw .anchor, .vzw .map-text, .vzw .cow, .vzw .vertex, .vzw .map-north {
+  position: absolute; left: 0; top: 0;
+  transform: translate(calc(var(--x) * 1cqw), calc(var(--y) * 1cqh)) translate(-50%, -50%);
+}
+.vzw .vx {
+  width: 9px; height: 9px; background: #fff;
+  border: 2px solid var(--fence); border-radius: 2px;
+  box-shadow: 0 0 0 1.5px rgba(8, 20, 13, 0.45);
+}
+.vzw .pin {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #2e6b42; border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.vzw .pin--sm { width: 12px; height: 12px; border-width: 2.5px; }
+.vzw .pin::after {
+  content: ""; position: absolute; inset: -3px; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9); opacity: 0;
+}
+.vzw .pin--warn { background: var(--fence); }
+.vzw .pin--warn::after { border-color: var(--fence); }
+.vzw .waves { position: absolute; inset: -14px; border-radius: 50%; pointer-events: none; }
+.vzw .waves::before, .vzw .waves::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid rgba(217, 232, 106, 0.9); opacity: 0;
+}
+
+.vzw .map-tag {
+  white-space: nowrap;
+  font-size: 11px; font-weight: 650; font-stretch: 118%; letter-spacing: 0.07em; text-transform: uppercase;
+  line-height: 1; color: var(--forest-950);
+  background: #fff; padding: 6px 8px 5px; border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.vzw .map-tag--pin { transform: translate(calc(var(--x) * 1cqw), calc(var(--y) * 1cqh)) translate(18px, -50%); }
+.vzw .map-tag--warn {
+  background: var(--fence);
+  transform: translate(calc(var(--x) * 1cqw), calc(var(--y) * 1cqh)) translate(-50%, 24px);
+}
+.vzw .map-tag--dark { background: rgba(10, 31, 21, 0.9); color: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+.vzw .map-tag--zone {
+  background: rgba(8, 20, 13, 0.62); color: #fff8d1;
+  box-shadow: none; border: 1px solid rgba(217, 232, 106, 0.75);
+  transform: translate(calc(var(--x) * 1cqw), calc(var(--y) * 1cqh)) translate(-50%, calc(-100% - 10px));
+}
+
+@keyframes vz-draw { to { stroke-dashoffset: 0; } }
+@keyframes vz-fade-in { to { opacity: 1; } }
+@keyframes vz-pop-in { to { opacity: 1; scale: 1; } }
+@keyframes vz-ping {
+  0% { opacity: 0.85; transform: scale(1); }
+  70%, 100% { opacity: 0; transform: scale(2.6); }
+}
+@keyframes vz-wave {
+  0% { opacity: 0.9; transform: scale(0.55); }
+  100% { opacity: 0; transform: scale(1.35); }
+}
+
+
+/* ---------- Virtual fence demo ---------- */
+.vzw .visor {
+  display: grid; grid-template-columns: minmax(0, 1fr) 340px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius-frame); overflow: hidden;
+  box-shadow: var(--shadow-1);
+}
+.vzw .visor-map { position: relative; aspect-ratio: 1000 / 680; container-type: size; overflow: hidden; background: var(--map-land); }
+.vzw .visor-stage {
+  position: absolute; left: 50%; top: 50%;
+  width: max(100cqw, calc(100cqh * 1000 / 680));
+  aspect-ratio: 1000 / 680;
+  transform: translate(-50%, -50%);
+  container-type: size;
+}
+.vzw .visor-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.vzw .map-land { fill: var(--map-land); }
+.vzw .map-parcels path { fill: none; stroke: var(--map-parcel); stroke-width: 1.3px; vector-effect: non-scaling-stroke; }
+.vzw .map-road-casing { fill: none; stroke: var(--map-road-casing); stroke-width: 15; stroke-linecap: round; }
+.vzw .map-road { fill: none; stroke: var(--map-road); stroke-width: 10; stroke-linecap: round; }
+.vzw .map-water { fill: var(--map-water); stroke: var(--map-water-edge); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.vzw .map-trees circle { fill: var(--map-tree); stroke: var(--map-tree-edge); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.vzw .zone-fill { fill: rgba(217, 232, 106, 0.14); }
+.vzw .zone-band { fill: none; stroke: rgba(217, 232, 106, 0.27); stroke-width: 72; stroke-linejoin: round; transition: opacity 200ms ease; }
+.vzw .visor[data-band="off"] .zone-band { opacity: 0; }
+.vzw .zone-halo { fill: none; stroke: rgba(12, 28, 18, 0.5); stroke-width: 6.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.vzw .zone-line { fill: none; stroke: var(--fence); stroke-width: 3px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.vzw .map-scale-bar { fill: var(--panel); stroke: var(--ink-2); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.vzw .map-scale-half { fill: var(--ink-2); }
+
+.vzw .map-text {
+  font-size: 11px; font-weight: 600; font-stretch: 118%; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--map-text); white-space: nowrap; pointer-events: none;
+}
+.vzw .map-text--pond { transform: translate(calc(var(--x) * 1cqw), calc(var(--y) * 1cqh)) translate(0, -50%); }
+.vzw .map-text--scale { transform: translate(calc(var(--x) * 1cqw), calc(var(--y) * 1cqh)) translate(0, -100%); letter-spacing: 0.04em; text-transform: none; }
+.vzw .map-north {
+  --x: 96; --y: 7;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 750; font-stretch: 110%; color: var(--ink);
+  background: var(--panel); box-shadow: var(--shadow-1); border: 1px solid var(--line);
+}
+
+.vzw .vertex {
+  width: 44px; height: 44px; display: grid; place-items: center;
+  cursor: grab; touch-action: none; border-radius: 8px;
+}
+.vzw .vertex::before {
+  content: ""; width: 13px; height: 13px; background: #fff;
+  border: 2.5px solid var(--fence); border-radius: 3px;
+  box-shadow: 0 0 0 1.5px rgba(12, 28, 18, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 160ms var(--ease-out);
+}
+.vzw .vertex:active, .vzw .vertex.is-dragging { cursor: grabbing; }
+.vzw .vertex.is-dragging::before, .vzw .vertex:active::before { transform: scale(1.2); }
+@media (hover: hover) and (pointer: fine) { .vzw .vertex:hover::before { transform: scale(1.15); } }
+.vzw .vertex:focus-visible { outline-offset: -6px; }
+
+.vzw .cow { width: 18px; height: 18px; pointer-events: none; transition: transform 1100ms var(--ease-in-out); }
+.vzw .cow--idle { border-radius: 50%; background: #2e6b42; border: 2.5px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); width: 14px; height: 14px; }
+.vzw .cow--active {
+  width: 48px; height: 48px; display: grid; place-items: center;
+  pointer-events: auto; cursor: grab; touch-action: none; border-radius: 50%;
+  transition: none;
+}
+.vzw .cow-dot {
+  position: relative; z-index: 1;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #2e6b42; border: 3.5px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 200ms ease, background-color 200ms ease, transform 160ms var(--ease-out);
+}
+.vzw .cow--active:active .cow-dot, .vzw .cow--active.is-dragging .cow-dot { transform: scale(1.12); }
+.vzw .cow--active.is-dragging { cursor: grabbing; }
+.vzw .cow-tag {
+  position: absolute; left: 50%; bottom: calc(100% - 4px); transform: translateX(-50%);
+  white-space: nowrap; font-size: 11px; font-weight: 650; font-stretch: 118%; letter-spacing: 0.07em; text-transform: uppercase;
+  background: #fff; color: var(--forest-950); padding: 5px 7px 4px; border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+.vzw .cow-waves { position: absolute; inset: -6px; border-radius: 50%; pointer-events: none; }
+.vzw .cow-waves::before, .vzw .cow-waves::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2.5px solid var(--fence); opacity: 0;
+}
+.vzw .visor[data-state="warn"] .cow-dot { background: var(--fence); box-shadow: 0 0 0 4px rgba(217, 232, 106, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4); }
+.vzw .visor[data-state="warn"] .cow-tag { background: var(--fence); color: var(--on-fence); }
+.vzw .visor[data-state="stim"] .cow-dot { background: var(--stim); box-shadow: 0 0 0 5px rgba(228, 87, 46, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4); }
+.vzw .visor[data-state="stim"] .cow-tag { background: var(--stim); color: #fff; }
+.vzw .visor[data-state="stim"] .cow-waves::before, .vzw .visor[data-state="stim"] .cow-waves::after { border-color: var(--stim); }
+.vzw .visor[data-state="out"] .cow-dot { background: var(--stim); }
+.vzw .visor[data-state="out"] .cow-tag { background: var(--stim); color: #fff; }
+@media (prefers-reduced-motion: no-preference) {
+  .vzw .visor[data-state="warn"] .cow-waves::before, .vzw .visor[data-state="stim"] .cow-waves::before { animation: vz-wave 1200ms var(--ease-out) infinite; }
+  .vzw .visor[data-state="warn"] .cow-waves::after, .vzw .visor[data-state="stim"] .cow-waves::after { animation: vz-wave 1200ms var(--ease-out) 600ms infinite; }
+  .vzw .visor[data-state="stim"] .cow-waves::before, .vzw .visor[data-state="stim"] .cow-waves::after { animation-duration: 700ms; }
+}
+
+.vzw .visor-hint {
+  position: absolute; left: 12px; bottom: 12px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 500; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 12px 7px 10px; box-shadow: var(--shadow-1);
+  transition: opacity 300ms ease, transform 300ms var(--ease-out);
+}
+.vzw .visor-hint .icon { width: 18px; height: 18px; color: var(--forest-500); }
+.vzw .visor-hint.is-hidden { opacity: 0; transform: translateY(6px); pointer-events: none; }
+.vzw .hint-short { display: none; }
+
+.vzw .visor-panel {
+  border-left: 1px solid var(--line);
+  padding: 24px; display: flex; flex-direction: column; gap: 22px;
+}
+.vzw .status-list { display: grid; gap: 4px; }
+.vzw .status {
+  display: grid; grid-template-columns: 22px 1fr; gap: 14px; align-items: start;
+  padding: 12px; border-radius: 12px;
+  transition: background-color 200ms ease;
+}
+.vzw .status > .icon { width: 22px; height: 22px; color: var(--forest-500); margin-top: 1px; }
+.vzw .status-label { display: block; font-size: 13px; color: var(--ink-3); }
+.vzw .status strong { display: block; font-size: 17px; font-weight: 650; font-stretch: 94%; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.vzw .status .icon-lightning { display: none; }
+.vzw .status[data-state="warn"] { background: rgba(217, 232, 106, 0.22); }
+.vzw .status[data-state="warn"] > .icon { color: var(--ink); }
+.vzw .status[data-state="stim"] { background: rgba(228, 87, 46, 0.14); }
+.vzw .status[data-state="stim"] > .icon { color: var(--stim); }
+.vzw .status[data-state="stim"] .icon-speaker { display: none; }
+.vzw .status[data-state="stim"] .icon-lightning { display: block; }
+
+.vzw .switch { display: inline-flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 500; cursor: pointer; position: relative; }
+.vzw .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.vzw .switch-ui {
+  width: 42px; height: 24px; border-radius: 999px; background: var(--line-strong); position: relative; flex: none;
+  transition: background-color 200ms ease;
+}
+.vzw .switch-ui::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 200ms var(--ease-out);
+}
+.vzw .switch input:checked + .switch-ui { background: var(--forest-500); }
+.vzw .switch input:checked + .switch-ui::after { transform: translateX(18px); }
+.vzw .switch input:focus-visible + .switch-ui { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.vzw .visor-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.vzw .visor-actions .btn { flex: 1 1 auto; }
+.vzw .visor-note { font-size: 13px; line-height: 1.5; color: var(--ink-3); margin-top: auto; }
+
+
+/* ---- Marco, variables y controles del simulador (paleta de la web) ---- */
+.vzw {
+  --ink: #eef5e6; --ink-2: #c8d8c2; --ink-3: #9db39a;
+  --panel: #0d2619; --panel-2: #12372a;
+  --line: rgba(238, 245, 230, 0.12); --line-strong: rgba(238, 245, 230, 0.3);
+  --fence: #d3f59d; --on-fence: #12372a; --stim: #ff8359;
+  --map-land: #0f2b1e; --map-parcel: #1b4030; --map-tree: #1d4a33; --map-tree-edge: #2a6144;
+  --map-road: #2c4a39; --map-road-casing: #183226; --map-water: #1f5870; --map-water-edge: #2c7490; --map-text: #a9c2a6;
+  --forest-950: #071b13; --forest-500: #9bd480;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25);
+  --radius-frame: 24px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  margin-top: 48px;
+}
+.vzw-head { display: flex; justify-content: space-between; align-items: end; gap: 6%; margin-bottom: 22px; }
+.vzw-head h3 { margin: 0; font-size: clamp(26px, 3vw, 38px); letter-spacing: -0.04em; line-height: 1.05; }
+.vzw-head p { margin: 0; max-width: 420px; font-size: 15px; color: #52644f; }
+.vzw .icon { width: 1.25em; height: 1.25em; fill: currentColor; flex: none; display: block; }
+.vzw .visor { color: var(--ink); box-shadow: 0 30px 70px -30px rgba(7, 27, 19, 0.55); }
+.vzw .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 48px; padding: 0 22px; border-radius: 999px; border: 1px solid transparent;
+  font: 600 15px/1 inherit; cursor: pointer; white-space: nowrap;
+  transition: transform 160ms var(--ease-out), background-color 160ms ease, border-color 160ms ease;
+}
+.vzw .btn:active { transform: scale(0.97); }
+.vzw .btn .icon { width: 18px; height: 18px; }
+.vzw .btn-forest { background: var(--fence); color: var(--on-fence); }
+.vzw .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+@media (hover: hover) and (pointer: fine) {
+  .vzw .btn-forest:hover { background: #e1fab6; }
+  .vzw .btn-ghost:hover { border-color: var(--ink-2); }
+}
+.vzw .visor-note { margin-top: auto; font-size: 13px; color: var(--ink-3); }
+.vzw .visor-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.vzw .status strong { color: var(--ink); }
+.vzw .cow-tag, .vzw .map-tag { color: var(--forest-950); }
+.vzw .status[data-state="warn"] { background: rgba(211, 245, 157, 0.14); }
+.vzw .status[data-state="warn"] > .icon { color: var(--fence); }
+.vzw .zone-fill { fill: rgba(211, 245, 157, 0.12); }
+.vzw .zone-band { stroke: rgba(211, 245, 157, 0.2); }
+.vzw .zone-halo { stroke: rgba(7, 27, 19, 0.7); }
+@media (max-width: 1040px) { .vzw .visor { grid-template-columns: minmax(0, 1fr) 300px; } }
+@media (max-width: 900px) {
+  .vzw-head { display: block; }
+  .vzw-head p { margin-top: 10px; }
+  .vzw .visor { grid-template-columns: 1fr; }
+  .vzw .visor-map { aspect-ratio: 1 / 1; max-height: 560px; }
+  .vzw .visor-panel { border-left: 0; border-top: 1px solid var(--line); }
+  .vzw .hint-long { display: none; }
+  .vzw .hint-short { display: inline; }
+  .vzw .map-text--pond { display: none; }
+}
+.vzw button { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; box-shadow: none; }
+.vzw .btn { padding: 0 22px; }
+.vzw .btn-forest { background: var(--fence); color: var(--on-fence); }
+.vzw .btn-ghost { border: 1px solid var(--line-strong); }
+.vzw .vertex { width: 44px; height: 44px; border-radius: 8px; }
+.vzw .cow--active { width: 48px; height: 48px; border-radius: 50%; }
+.vzw ul { padding: 0; margin: 0; list-style: none; }
+.vzw .cow-dot { background: #8bd68f; border-color: #fff; }
+.vzw .cow--idle { background: #8bd68f; }
+.vzw .visor[data-state="warn"] .cow-dot { background: var(--fence); }
+.vzw .visor[data-state="stim"] .cow-dot, .vzw .visor[data-state="out"] .cow-dot { background: var(--stim); }
+.vzw .switch { color: var(--ink); }
